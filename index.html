@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 全自動マネタイズシステム｜美咲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F27935;
+    --orange-dark: #D4611C;
+    --cream: #FFF8F0;
+    --cream-dark: #FFF0E0;
+    --dark: #2D1A0E;
+    --text: #3D2210;
+    --text-light: #8B7355;
+    --white: #FFFFFF;
+    --border: #F0DCC8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 2;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 基本レイアウト ===== */
+  .sec { padding: 64px 20px; text-align: center; }
+  .sec-white { background: var(--white); }
+  .sec-cream { background: var(--cream); }
+  .sec-cream-dark { background: var(--cream-dark); }
+  .inner { max-width: 520px; margin: 0 auto; }
+
+  /* ===== タイポグラフィ（まさみLP準拠：大きめ・センター） ===== */
+  .t-hero {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 32px; font-weight: 900; line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .t-xl {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px; font-weight: 700; line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .t-lg { font-size: 20px; font-weight: 700; line-height: 1.7; margin-bottom: 16px; }
+  .t-md { font-size: 17px; font-weight: 700; line-height: 1.8; margin-bottom: 12px; }
+  .t-body { font-size: 15px; line-height: 2.2; margin-bottom: 24px; text-align: center; }
+  .t-sm { font-size: 13px; color: var(--text-light); line-height: 1.8; }
+  .t-center { text-align: center; }
+  .t-orange { color: var(--orange); }
+  .t-bold { font-weight: 700; }
+  .t-big { font-size: 20px; }
+
+  /* ===== 装飾見出し（オレンジ上下ライン） ===== */
+  .heading-box {
+    border-top: 3px solid var(--orange);
+    border-bottom: 3px solid var(--orange);
+    padding: 20px 16px;
+    margin-bottom: 28px;
+    display: inline-block;
+  }
+  .heading-box .t-xl { margin-bottom: 0; }
+
+  /* ===== セクションラベル（ピル型） ===== */
+  .pill {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    color: var(--orange); letter-spacing: 0.2em;
+    padding: 4px 20px;
+    border: 1px solid var(--orange);
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* ===== 緊急バー ===== */
+  .urgency {
+    background: linear-gradient(90deg, #C2410C, #E05320);
+    color: white; text-align: center;
+    padding: 14px 16px; font-size: 13px; font-weight: 700;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(194,65,12,0.3);
+  }
+
+  /* ===== 引用ボックス ===== */
+  .quote {
+    border-left: 4px solid var(--orange);
+    padding: 24px 24px;
+    background: var(--white);
+    margin: 28px 0;
+    border-radius: 0 8px 8px 0;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(242,121,53,0.08);
+  }
+
+  /* ===== ストーリーカード ===== */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 24px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  .card-highlight {
+    background: var(--cream-dark);
+    border-left: 4px solid var(--orange);
+    padding: 24px;
+    margin: 28px 0;
+    border-radius: 0 8px 8px 0;
+    text-align: center;
+    font-size: 15px; line-height: 2.2;
+  }
+
+  /* ===== 原因カード ===== */
+  .reason {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .reason-num {
+    display: inline-block;
+    background: var(--orange); color: white;
+    font-weight: 900; font-size: 12px;
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .reason h3 { font-size: 17px; font-weight: 900; margin-bottom: 10px; }
+  .reason p { font-size: 14px; line-height: 2; }
+
+  /* ===== シーンカード（恐怖・ベネフィット） ===== */
+  .scene {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--orange);
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .scene.fear { border-left-color: #C2410C; background: #FFFAF5; }
+  .scene-label { color: var(--orange-dark); font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .scene p { font-size: 15px; line-height: 2.2; }
+
+  /* ===== システムステップ（まさみLP風：番号+テキスト） ===== */
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    margin-bottom: 24px; text-align: left;
+  }
+  .step-num {
+    background: var(--orange); color: white;
+    font-weight: 900; font-size: 14px;
+    min-width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-body h3 { font-size: 16px; font-weight: 900; margin-bottom: 4px; }
+  .step-body p { font-size: 14px; line-height: 1.9; color: var(--text); }
+
+  /* ===== 特典カード（まさみLP風：リスト形式） ===== */
+  .bonus-list {
+    background: var(--white);
+    border: 2px solid var(--orange);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-top: 24px;
+  }
+  .bonus-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--cream);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px; font-weight: 700;
+  }
+  .bonus-item:last-child { margin-bottom: 0; }
+  .bonus-num {
+    background: var(--orange); color: white;
+    font-weight: 900; font-size: 12px;
+    min-width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ===== お客様の声（LINE風吹き出し：まさみLP準拠） ===== */
+  .voice-bubble {
+    background: #FFF9F0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .voice-bubble.doubt { border-left: 3px solid #C2410C; }
+  .voice-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    color: var(--orange);
+    background: var(--cream-dark);
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+  .voice-bubble.doubt .voice-tag { color: #C2410C; }
+  .voice-bubble p { font-size: 14px; line-height: 2; }
+  .voice-meta { font-size: 12px; color: var(--text-light); margin-top: 10px; }
+
+  /* ===== CTA ===== */
+  .cta-area { padding: 52px 20px; text-align: center; }
+  .cta-btn {
+    display: block;
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color: white; text-align: center;
+    padding: 22px 20px; border-radius: 12px;
+    font-size: 19px; font-weight: 900;
+    text-decoration: none; line-height: 1.5;
+    max-width: 480px; margin: 0 auto;
+    box-shadow: 0 8px 28px rgba(242,121,53,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .cta-btn::before {
+    content:''; position:absolute; top:0; left:-100%;
+    width:100%; height:100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2.5s infinite;
+  }
+  @keyframes shimmer { 100% { left:100%; } }
+  .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(242,121,53,0.5); }
+  .cta-sub { font-size: 13px; font-weight: 500; opacity: 0.9; margin-top: 4px; }
+  .cta-note { font-size: 12px; color: var(--text-light); margin-top: 10px; }
+
+  /* ===== 価格 ===== */
+  .price-box {
+    background: var(--cream);
+    border: 2px solid var(--orange);
+    border-radius: 16px;
+    padding: 36px 24px;
+    text-align: center;
+    margin: 28px 0;
+    position: relative;
+  }
+  .price-box::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:4px;
+    background: linear-gradient(90deg, var(--orange), var(--orange-dark), var(--orange));
+    border-radius: 16px 16px 0 0;
+  }
+  .price-amount {
+    font-size: 56px; font-weight: 900; color: var(--orange); line-height: 1;
+    margin: 12px 0 8px;
+  }
+
+  .compare-table {
+    width:100%; border-collapse:separate; border-spacing:0;
+    margin-bottom:24px; font-size:13px; border-radius:12px;
+    overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  }
+  .compare-table th,.compare-table td {
+    padding:12px 12px; border-bottom:1px solid var(--border); text-align:center;
+  }
+  .compare-table th { background:var(--cream-dark); font-size:12px; font-weight:700; }
+  .compare-table td { background:var(--white); }
+  .compare-table .hl { background:rgba(242,121,53,0.08); font-weight:900; color:var(--orange-dark); }
+
+  /* ===== 条件 ===== */
+  .cond-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+  @media(max-width:480px) { .cond-grid { grid-template-columns:1fr; } }
+  .cond-card { border-radius:12px; padding:20px 18px; font-size:14px; line-height:1.9; text-align:center; }
+  .cond-ok { background:#F0FFF4; border:1px solid #86EFAC; }
+  .cond-ok h3 { color:#15803D; font-size:14px; font-weight:900; margin-bottom:10px; }
+  .cond-ng { background:#FFF7ED; border:1px solid #FED7AA; }
+  .cond-ng h3 { color:#C2410C; font-size:14px; font-weight:900; margin-bottom:10px; }
+  .cond-list { list-style:none; }
+  .cond-list li { padding:5px 0; border-bottom:1px solid rgba(0,0,0,0.04); font-size:13px; }
+  .cond-list li:last-child { border-bottom:none; }
+
+  /* ===== Q&A ===== */
+  .qa-item { margin-bottom:20px; text-align:center; }
+  .qa-q {
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    color:white; padding:18px 24px;
+    border-radius:12px 12px 0 0;
+    font-weight:700; font-size:15px; text-align:center;
+  }
+  .qa-a {
+    background:var(--white); padding:20px 24px;
+    border-radius:0 0 12px 12px;
+    border:1px solid var(--border); border-top:none;
+    font-size:15px; line-height:2.1; text-align:center;
+  }
+
+  /* ===== バックエンド ===== */
+  .backend {
+    background:var(--white); border:2px dashed var(--orange);
+    border-radius:12px; padding:28px 24px; margin-top:28px;
+  }
+
+  /* ===== PS ===== */
+  .ps { background:var(--cream-dark); padding:32px 20px; }
+  .ps-inner { max-width:520px; margin:0 auto; font-size:14px; line-height:2.2; text-align:left; }
+
+  /* ===== アニメーション ===== */
+  .fade-in { opacity:0; transform:translateY(24px); transition:opacity 0.7s ease, transform 0.7s ease; }
+  .fade-in.visible { opacity:1; transform:none; }
+
+  /* ===== セクション区切り強化 ===== */
+  .sec-white + .sec-cream,
+  .sec-cream + .sec-white,
+  .sec-cream + .sec-cream-dark,
+  .sec-cream-dark + .sec-white {
+    border-top: 1px solid rgba(242,121,53,0.12);
+  }
+
+  /* ===== 見出し下の装飾ライン ===== */
+  .pill + .t-xl { margin-top: 8px; }
+
+  /* ===== スマホ ===== */
+  @media(max-width:600px) {
+    .sec { padding:40px 18px; }
+    .t-hero { font-size:26px; }
+    .t-xl { font-size:22px; }
+    .t-lg { font-size:18px; }
+    .t-body { font-size:14px; }
+    .price-amount { font-size:44px; }
+    .cta-btn { font-size:17px; padding:20px 18px; }
+    .compare-table { font-size:12px; }
+    .compare-table th,.compare-table td { padding:10px 8px; }
+  }
+  /* ===== PC幅制限 ===== */
+  @media(min-width:768px) {
+    .inner { max-width:520px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="urgency">サポート品質維持のため<strong>30名</strong>で締め切り｜31人目以降は次回募集をお待ちください</div>
+
+<!-- ====== HERO：ベネフィット提示 → 実績 → CTA ====== -->
+<div class="sec sec-cream">
+  <div class="inner">
+    <p class="t-hero">
+      あなた専用の<br>
+      <span class="t-orange">「自動販売機」</span>を<br>
+      たった2時間で手に入れる
+    </p>
+    <p class="t-center" style="margin-top:16px;font-size:17px;line-height:2">
+      商品設計 → 集客 → 販売まで<br>
+      AIが全自動で回し続ける仕組みを<br>
+      あなたのPCに丸ごとインストールします。
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px">
+      <span style="background:white;border:1px solid var(--orange);padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700">プログラミング <strong class="t-orange">不要</strong></span>
+      <span style="background:white;border:1px solid var(--orange);padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700">設定 <strong class="t-orange">約2時間</strong></span>
+      <span style="background:white;border:1px solid var(--orange);padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700">月額 <strong class="t-orange">約3,000円</strong>だけ</span>
+      <span style="background:white;border:1px solid var(--orange);padding:10px 16px;border-radius:6px;font-size:13px;font-weight:700">商品設計から <strong class="t-orange">全サポート</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA① ヒーロー直後 -->
+<div class="cta-area sec-cream" style="padding-top:0">
+  <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">今すぐ自動販売機を手に入れる →<div class="cta-sub">決済完了した瞬間にシステム一式が届きます</div></a>
+  <p class="cta-note">クレジットカード対応</p>
+</div>
+
+<!-- ====== ENEMY ====== -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <div class="heading-box">
+      <p class="t-xl" style="margin:0;font-size:28px">あなたが稼げないのは、<br><span class="t-orange">努力が足りないからじゃない。</span><br>間違った設計図を<br>渡されたからだ。</p>
+    </div>
+    <p class="t-body">毎晩2時まで記事を書いた。半年やって売上ゼロ。投資を始めた。<br>マイナス40万。プログラミングスクールに60万払った。挫折した。</p>
+    <p class="t-body">全部、「正しいやり方」だと教えられたものでした。</p>
+    <div class="quote">
+      <p class="t-body" style="margin:0"><span style="white-space:nowrap">努力の方向が間違っていれば、どれだけ走っても目的地には着かない。</span><br><br><strong class="t-orange" style="white-space:nowrap">問題はあなたじゃない。渡された設計図が、最初から間違ってたんです。</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== STORY ====== -->
+<div class="sec sec-cream fade-in">
+  <div class="inner">
+    <span class="pill">STORY</span>
+    <p class="t-xl">4年間・450万円・全部失敗した私が、<br><span class="t-orange">なぜ今これを語れるのか。</span></p>
+    <div style="margin-bottom:24px">
+      <img src="misaki_icon.png" alt="美咲" style="width:80px;height:80px;border-radius:50%">
+      <p class="t-md" style="margin-top:8px;margin-bottom:2px">美咲</p>
+      <p class="t-sm">30代・2児のママ</p>
+    </div>
+    <div class="card">
+      <p class="t-body">夜10時。子ども2人を寝かしつけた後、リビングの電気を消して、キッチンのカウンターでノートPCを開く。それが私の「副業時間」でした。</p>
+      <p class="t-body">ブログを書いた。毎晩2時まで。目が充血して、翌朝は子どもの声で起こされて、ぼんやりしたまま朝食を作る。半年続けて、売上ゼロ。</p>
+      <p class="t-body">「次こそは」と思って投資に手を出した。マイナス40万。プログラミングスクールに60万。挫折。物販、FX…気づいたら<strong>450万円以上</strong>が消えていた。</p>
+      <div class="card-highlight">ある夜、暗いキッチンでスマホの収支アプリを開いた。また赤字。涙が止まらなかった。隣の部屋では子どもが寝息を立てている。この子たちのために始めたはずなのに、私は何をやっているんだろう。</div>
+      <p class="t-body">変わったのは、Claude Codeに出会ってから。プログラミングなんてできない。センスもない。でも、日本語で指示するだけで、リサーチも、記事も、投稿も、LPも、全部動いた。</p>
+      <p class="t-body" style="margin:0">初めて通知が来た日のことは忘れない。Stripeから「決済完了」。手が震えた。<strong class="t-orange">設定しただけなのに、寝ている間に売れた。</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== WHY ====== -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <span class="pill">WHY</span>
+    <p class="t-xl"><span class="t-orange">なぜ、あなたは</span><br>今まで成功できなかったのか</p>
+    <div class="reason"><div class="reason-num">原因 1</div><h3>何を売ればいいか、誰も教えてくれなかった</h3><p>「自分には売れるものがない」と思い込んでいませんか？ 違います。あなたが当たり前だと思っている経験が、他の人にはお金を払ってでも知りたい情報なんです。</p></div>
+    <div class="reason"><div class="reason-num">原因 2</div><h3>「売れる言葉の型」を知らなかった</h3><p>センスの問題じゃない。売れるフレーズには型がある。でもその型は、大きな成果を出してきた人たちの頭の中にしかなかった。このシステムには、その型が設計図として組み込まれています。</p></div>
+    <div class="reason"><div class="reason-num">原因 3</div><h3>集客の仕組みがなかった</h3><p>どれだけ良い記事を書いても、読まれなければ存在しないのと同じ。集客導線を自動で構築しない限り、砂漠にチラシを撒き続ける生活からは抜け出せません。</p></div>
+    <p class="t-lg t-orange" style="margin-top:12px">この3つの原因を、<br>全部まとめて消し去るのが<br>このシステムです。</p>
+  </div>
+</div>
+
+<!-- ====== FEAR ====== -->
+<div class="sec sec-cream-dark fade-in">
+  <div class="inner">
+    <span class="pill">WARNING</span>
+    <p class="t-xl">ここで立ち止まって、<br><span class="t-orange">想像してみてください。</span></p>
+    <div class="scene fear"><div class="scene-label">このページを閉じた、3年後のあなた</div><p>朝起きて、今日も同じ作業を繰り返す。SNSを開いて、他の人の成功を眺める。「いいな」と思いながら、自分は何も変わっていない。物価は上がり続けて、子どもは大きくなって、お金がかかる場面が増えていく。</p></div>
+    <div class="scene fear"><div class="scene-label">AIの波に乗れなかった人の現実</div><p>2026年、AIを使って仕組みを作った人と、使わなかった人の差は取り返しがつかないレベルで広がっています。半年後には、あなたの競合がこのシステムを使い始めているかもしれない。</p></div>
+  </div>
+</div>
+
+<!-- ====== BENEFIT ====== -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <span class="pill">FUTURE</span>
+    <p class="t-xl">逆に、<span class="t-orange">動いた人の日常</span>は<br>こう変わります。</p>
+    <div class="scene"><p>朝8時。子どもを保育園に送った帰り道、スマホを見る。Stripeから「決済完了」の通知。昨日設定しただけなのに、寝ている間に売れた。カフェに寄って、コーヒーを飲みながら30分だけ作業。今日の仕事はこれで終わり。</p></div>
+    <div class="scene"><p>スーパーで値段を見ずにカゴに入れる。週末に子どもが「あれ欲しい」と指さしたとき、「いいよ」と即答できる。たった月3万の副収入で、こんなに気持ちが変わるとは思わなかった。</p></div>
+    <div class="scene"><p>旦那に「最近なんか余裕あるね」と言われた。内緒にしてた副業のことを話したとき、目を丸くした旦那の顔。あの表情は一生忘れない。</p></div>
+    <div class="scene"><p>今までSNSで他人の成功ばかり見てきた。「あの人はすごいな」「自分には無理だ」と思いながらスクロールしてきた。でもシステムを動かした瞬間、画面の向こう側にいたあなたが、主役になる。</p></div>
+  </div>
+</div>
+
+<!-- ====== SYSTEM ====== -->
+<div class="sec sec-cream fade-in">
+  <div class="inner">
+    <span class="pill">SYSTEM</span>
+    <p class="t-xl">Claude Codeに指示するだけで<br><span class="t-orange">6つが全自動で回り続ける</span></p>
+    <div class="step"><div class="step-num">01</div><div class="step-body"><h3>商品設計アシスタント</h3><p>「何を売ればいいかわからない」でも大丈夫。<br>あなたの経験から売れる商品を一緒に設計します。</p></div></div>
+    <div class="step"><div class="step-num">02</div><div class="step-body"><h3>5プラットフォーム競合分析</h3><p>note・アメブロ・YouTube・Threads・Xの売れ筋を自動分析。<br>「なぜ売れているか」まで解明します。</p></div></div>
+    <div class="step"><div class="step-num">03</div><div class="step-body"><h3>記事＆投稿の自動生成</h3><p>リサーチ結果をもとにnote記事・Threads投稿・アメブロ記事を<br>AIが自動生成。</p></div></div>
+    <div class="step"><div class="step-num">04</div><div class="step-body"><h3>3プラットフォーム全自動投稿</h3><p>note・Threads・アメブロに自動投稿。集客導線が自動で構築されます。</p></div></div>
+    <div class="step"><div class="step-num">05</div><div class="step-body"><h3>LP自動作成</h3><p>売れる構成のLPをAIが丸ごと生成。<br>このLP自体もシステムで作っています。</p></div></div>
+    <div class="step"><div class="step-num">06</div><div class="step-body"><h3>Stripe決済で自動販売</h3><p>集めて→見せて→売る。このサイクルが寝ている間も回り続けます。</p></div></div>
+    <div class="bonus-list">
+      <p class="t-lg t-orange t-center" style="margin-bottom:16px">購入者限定 3つの特典</p>
+      <div class="bonus-item"><span class="bonus-num">1</span>Stripe決済セットアップ完全手順書</div>
+      <div class="bonus-item"><span class="bonus-num">2</span>5分クイックスタートガイド</div>
+      <div class="bonus-item"><span class="bonus-num">3</span>トラブルシューティング集</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== VOICE（LINE風吹き出し） ====== -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <span class="pill">VOICE</span>
+    <p class="t-xl"><span class="t-orange">実際に動いた人</span>たちの声</p>
+    <div class="voice-bubble doubt">
+      <span class="voice-tag">最初は正直、疑ってた方</span>
+      <p>「また自動化ツールか…と思いました。過去に3つ買って全部ダメだったので。でも1週間で4万円の売上が出たとき手が震えた。設定しただけなのに。疑っててごめんなさい。」</p>
+      <div class="voice-meta">30代・会社員ママ｜1週間で投資額を回収</div>
+    </div>
+    <div class="voice-bubble">
+      <span class="voice-tag">PC操作がほぼできなかった方</span>
+      <p>「60代でスマホがやっとの私に、こんなことできるわけないと思ってました。でもガイド通りにやったら2時間で終わった。孫に自慢しました。」</p>
+      <div class="voice-meta">60代・専業主婦｜PC操作ほぼ未経験から2時間で完了</div>
+    </div>
+    <div class="voice-bubble">
+      <span class="voice-tag">商品ゼロからスタートした方</span>
+      <p>「売るものなんてないと思ってた。でもヒアリングで介護の経験が商品になると気づいた。note記事を3本出して、初月で2万円。今は毎月安定しています。」</p>
+      <div class="voice-meta">40代・介護職｜商品ゼロから月数万の安定収入</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA① -->
+<div class="cta-area sec-cream">
+  <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">今すぐ自動販売機を手に入れる →<div class="cta-sub">決済完了した瞬間にシステム一式が届きます</div></a>
+  <p class="cta-note">クレジットカード対応</p>
+</div>
+
+<!-- ====== PRICE ====== -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <span class="pill">PRICE</span>
+    <p class="t-xl">このシステムと同じことを<br><span class="t-orange">外注したらいくら？</span></p>
+    <p class="t-sm t-center" style="margin-bottom:20px">※ 2026年時点の実勢価格を調査して算出</p>
+    <table class="compare-table">
+      <tr><th style="text-align:left">内容</th><th>外注の実勢価格</th></tr>
+      <tr><td style="text-align:left">商品設計コンサル</td><td>40万〜200万円</td></tr>
+      <tr><td style="text-align:left">LP制作</td><td>10万〜40万円</td></tr>
+      <tr><td style="text-align:left">SNS運用代行（3媒体）</td><td>年60万〜360万円</td></tr>
+      <tr><td style="text-align:left">セールスライティング</td><td>1本5万〜20万円</td></tr>
+      <tr><td style="text-align:left">競合リサーチ</td><td>10万〜50万円</td></tr>
+    </table>
+    <p class="t-sm t-center" style="margin-bottom:8px">合計：<strong>最低でも70万円以上</strong></p>
+    <div style="background:var(--white);border-radius:12px;padding:24px 20px;margin:24px 0;text-align:center;line-height:2.2">
+      <p class="t-body">正直、この価格は赤字覚悟です。</p>
+      <p class="t-body">私自身、過去にお金がなくて<br>高額スクールに入りたいのに入れなかった経験があります。</p>
+      <p class="t-body">「学びたい」「変わりたい」という気持ちがあるのに、<br>金額で諦めるしかなかったあの悔しさは、今でも覚えています。</p>
+      <p class="t-body t-bold">だから、本気で今の現状を変えたい人が<br>手を伸ばせる金額にしました。</p>
+    </div>
+    <div class="price-box">
+      <p class="t-sm">Claude Code 全自動マネタイズシステム</p>
+      <div class="price-amount">¥39,800</div>
+      <p class="t-sm">（税込・一括・追加費用なし）</p>
+      <p class="t-orange t-bold" style="margin-top:10px;font-size:13px">サポート品質維持のため30名で締め切り</p>
+    </div>
+    <!-- CTA② -->
+    <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">今すぐ申し込む →<div class="cta-sub">決済完了後すぐにシステム一式をお届けします</div></a>
+    <p class="cta-note">クレジットカード対応</p>
+  </div>
+</div>
+
+<!-- CONDITIONS -->
+<div class="sec sec-cream fade-in">
+  <div class="inner">
+    <p class="t-xl">必要条件と<br><span class="t-orange">向いている人・いない人</span></p>
+    <div style="background:var(--white);border-radius:12px;padding:20px;margin-bottom:20px;border-left:4px solid var(--orange);text-align:center">
+      <p class="t-bold" style="margin-bottom:8px;font-size:14px">動作環境</p>
+      <p class="t-sm" style="line-height:2">✓ Windows PC（メモリ16GB以上）<br>✓ Claude Proプラン（月約3,000円）<br><span style="font-size:12px;color:#888">※より売上を大きくしていきたい方はMAXプラン推奨。月5万円程度ならProプランで十分です。</span><br>✓ Stripeアカウント（無料）<br>✓ プログラミング知識：<strong>一切不要</strong></p>
+    </div>
+    <div class="cond-grid">
+      <div class="cond-card cond-ok"><h3>こんな人に届けたい</h3><ul class="cond-list"><li>副業で月3〜10万を本気で目指す</li><li>時間がなくても仕組みで解決したい</li><li>自分の経験を活かしたい</li><li>今すぐ動ける覚悟がある</li><li>本気で人生を変えたいと思っている</li></ul></div>
+      <div class="cond-card cond-ng"><h3>このシステムでは助けられない</h3><ul class="cond-list"><li>ボタン1つで稼げると思っている</li><li>初期設定の2時間すら出せない</li><li>PCを持っていない方</li><li>PCがないと言い続けて動く気がない方</li><li>行動より考えることが好きな人</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- Q&A -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <span class="pill">Q&amp;A</span>
+    <p class="t-xl" style="margin-bottom:24px">よくある質問</p>
+    <div class="qa-item"><div class="qa-q">Q. プログラミングは必要ですか？</div><div class="qa-a">A. 一切不要です。日本語で話しかけるだけでAIが全部動かしてくれます。<br>コードを書く場面は一度もありません。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. 39,800円は高くないですか？</div><div class="qa-a">A. 同じことを外注すると最低でも70万円以上。このシステムは<br>一括39,800円で、月額費用はClaude Pro（約3,000円）だけです。<br>※より売上を大きくしていきたい方はMAXプラン推奨。月5万円程度ならProプランで十分です。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. 本当に私にもできますか？</div><div class="qa-a">A. PC操作がほぼ未経験の60代の方が、2時間でセットアップを完了しています。AIが対話形式で1ステップずつガイドします。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. 売る商品がまだないんですが…</div><div class="qa-a">A. このシステムの最初の機能が「商品設計」です。あなたの経験からヒアリングして、リサーチデータと掛け合わせて商品を設計します。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. スマホだけではできませんか？</div><div class="qa-a">A. できません。PCでの操作が必須です。スマホだけで完結するビジネスツールは存在しません。PCへの投資ができない方は、残念ですがいつまでも仕組みで稼ぐステージには上がれません。本気で現状を変えたいなら、まずPCを用意するところから始めてください。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. 時間がないんですが…</div><div class="qa-a">A. 初期設定は約2時間。そのあとは1回30分の操作で運用できます。子どもが寝た後のスキマ時間で十分です。</div></div>
+    <div class="qa-item"><div class="qa-q">Q. Macでは使えませんか？</div><div class="qa-a">A. 現在はWindows PC（メモリ16GB以上）が必要です。Mac対応は未定です。</div></div>
+  </div>
+</div>
+
+<!-- CTA③ -->
+<div class="cta-area sec-cream">
+  <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">不安が消えたなら、今すぐ始める →<div class="cta-sub">39,800円｜決済完了後すぐにお届け</div></a>
+</div>
+
+<!-- FUTURE BAD → CTA④ -->
+<div class="sec sec-white fade-in">
+  <div class="inner">
+    <p class="t-xl">このページを閉じて、<br>また<span class="t-orange">「今度にしよう」</span>と思った人へ。</p>
+    <p class="t-body t-center">3年前も「今度にしよう」と思いませんでしたか？</p>
+    <p class="t-body t-center">その「今度」は来ましたか？</p>
+    <p class="t-body t-center">物価だけが上がり続けて、子どもだけが大きくなっていく。あなたは3年前と同じ場所にいる。</p>
+    <p class="t-body t-center t-bold">39,800円を「高い」と感じる今の状況を、変えたくてここにいるんじゃないですか？</p>
+    <div style="margin-top:28px">
+      <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">今すぐ動く →<div class="cta-sub">Claude Code 全自動マネタイズシステム｜39,800円</div></a>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSING -->
+<div class="sec sec-cream fade-in">
+  <div class="inner">
+    <div style="max-width:680px;margin:0 auto">
+      <p class="t-xl">最後に</p>
+      <p class="t-xl t-orange" style="white-space:nowrap">美咲から本音を話させてください。</p>
+    </div>
+    <p class="t-body t-center">正直、この価格は赤字覚悟です。</p>
+    <p class="t-body t-center">私自身、過去にお金がなくて高額スクールに入りたいのに入れなかった経験があります。「学びたい」「変わりたい」という気持ちがあるのに、金額で諦めるしかなかったあの悔しさは、今でも覚えています。</p>
+    <p class="t-body t-center">だから、本気で今の現状を変えたい人が手を伸ばせる金額にしました。</p>
+    <p class="t-body t-center">ただし、「安いから買ってみよう」という方には渡したくない。39,800円を払って、本気で動く覚悟がある人だけに届けたい。この価格は、あなたの本気度を確かめるラインでもあります。</p>
+    <p class="t-body t-center">申し込んでくれたら、決済完了した瞬間にシステム一式が届きます。1分後にはセットアップを始められます。</p>
+    <p class="t-body t-orange t-bold" style="font-size:17px;text-align:center">明日の朝、あなたのスマホに<br>「決済完了」の通知が届くことを、<br>心から願っています。</p>
+    <div style="margin-top:28px">
+      <a href="https://buy.stripe.com/5kQ9AU4ui2eFgZna77dMI0w" class="cta-btn">今すぐ申し込む →<div class="cta-sub">39,800円｜30名限定</div></a>
+      <p class="cta-note">定員に達した時点で受付終了</p>
+    </div>
+    <div class="backend" style="margin-top:32px">
+      <p class="t-sm" style="margin-bottom:6px">さらに上を目指したい方へ</p>
+      <p class="t-lg t-center"><span class="t-orange">美咲の個別コンサルティング</span></p>
+      <p class="t-sm t-center">システム導入後、あなたのジャンル・商品に合わせた完全オーダーメイドの戦略設計を1対1でサポートします。</p>
+      <p class="t-sm t-center" style="margin-top:8px">※ システム購入者限定でご案内しています</p>
+    </div>
+  </div>
+</div>
+
+<!-- PS -->
+<div class="ps">
+  <div class="ps-inner">
+    <strong>追伸：</strong>昨日も「また今度にしよう」と思いましたか？ その「今度」を何年前から言い続けていますか？ 行動する人と見ているだけの人の差は、才能じゃない。「今日、このボタンを押すかどうか」だけです。
+  </div>
+</div>
+
+<script>
+const o = new IntersectionObserver(e => { e.forEach(el => { if(el.isIntersecting) el.target.classList.add('visible'); }); }, {threshold:0.1});
+document.querySelectorAll('.fade-in').forEach(el => o.observe(el));
+</script>
+</body>
+</html>
